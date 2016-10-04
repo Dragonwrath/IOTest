@@ -106,8 +106,8 @@ public class SmartConfigActivity extends AppCompatActivity {
         config_row2_title.setText("KEY");
 
 
-        config_row1_content.setText("123456");
-        config_row2_content.setText("123456");
+        config_row1_content.setText("junwei1");
+        config_row2_content.setText("82546007");
         config_row3_content.setText("=");
 
 

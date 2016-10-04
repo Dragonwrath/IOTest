@@ -3,4 +3,6 @@
     <string name="main">主界面</string>
     <string name="action_settings">设置</string>
     <string name="app_name">IOT测试</string>
+    <string name="relay_close">环回功能关闭</string>
+    <string name="relay_open">环回功能开启</string>
 </resources>

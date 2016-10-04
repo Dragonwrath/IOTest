@@ -7,13 +7,16 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.junwtech.iotest.R;
 import com.junwtech.iotest.base.BaseApplication;
@@ -32,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private boolean relay;
 
-    private Switch mSwitch;
+    private ToggleButton mSwitch;
     private TextView mTextView;
     public Handler mHandler = new Handler() {
         @Override
@@ -56,9 +59,12 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         EventBus.getDefault().register(this);
 
-        mSwitch = (Switch) findViewById(R.id.switch_main);
+        mSwitch = (ToggleButton) findViewById(R.id.switch_main);
         mSwitch.setOnCheckedChangeListener(this);
+        Log.w(this.getLocalClassName(),"---->"+mSwitch.getScrollBarStyle());
         new ReceiveThread(getApplicationContext()).start();
+
+
     }
 
     @Override

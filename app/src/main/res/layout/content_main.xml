@@ -28,17 +28,16 @@
             android:text="Hello World!"/>
     </LinearLayout>
 
-    <Switch
+    <ToggleButton
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:id="@+id/switch_main"
         android:switchPadding="10dp"
-        android:textOff="环回功能关闭"
-        android:textOn="环回功能开启"
+        android:textOff="@string/relay_close"
+        android:textOn="@string/relay_open"
         android:textColor="#008844"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:checked="false"/>
 
 
