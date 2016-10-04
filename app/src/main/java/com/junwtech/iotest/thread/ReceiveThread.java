@@ -39,15 +39,13 @@ public class ReceiveThread extends Thread {
         while (true) {
             try {
                 mWifiLock.acquire();
-                receiveSocket = new DatagramSocket(50000);
-                receiveSocket.setSoTimeout(5000);
+                receiveSocket = new DatagramSocket(50002);
+                receiveSocket.setSoTimeout(10000);
                 byte[] data = new byte[1024];
                 receviePacket = new DatagramPacket(data,data.length);
                 receiveSocket.receive(receviePacket);
-
                 if (receviePacket != null)
                      EventBus.getDefault().post(new ReceiveEvent(receviePacket));
-
             } catch (Exception e){
                 e.printStackTrace();
             } finally {
@@ -61,7 +59,6 @@ public class ReceiveThread extends Thread {
                     receiveSocket = null;
                 }
             }
-
         }
 
     }

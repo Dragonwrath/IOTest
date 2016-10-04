@@ -4,9 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-/**
- * Created by JunWei on 2016/9/30.
- */
+
 
 public class SendThread extends Thread {
 
@@ -21,6 +19,9 @@ public class SendThread extends Thread {
     public void run() {
         try {
             mSocket = new DatagramSocket();
+            if (dp.getAddress().getHostName().contains(".255"))
+                mSocket.setBroadcast(true);
+            mSocket.setSoTimeout(2000);
             if (dp != null)
                 mSocket.send(dp);
 

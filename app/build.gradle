@@ -10,6 +10,12 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+            moduleName "amludp"
+            abiFilters "armeabi", "armeabi-v7a", "x86"
+            cFlags "-std=c11 -Wall -Wextra -Os -fno-stack-protector"
+            ldLibs "log"
+        }
     }
     buildTypes {
         release {

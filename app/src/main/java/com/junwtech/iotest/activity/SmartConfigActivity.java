@@ -1,5 +1,8 @@
 package com.junwtech.iotest.activity;
 
+import android.content.Context;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
@@ -15,20 +18,22 @@ import android.widget.Toast;
 import com.junwtech.iotest.R;
 import com.junwtech.iotest.base.BaseApplication;
 import com.junwtech.iotest.bean.DataMember;
+import com.junwtech.iotest.bean.DataModel;
+import com.junwtech.iotest.bean.SmartConfigParam;
 import com.junwtech.iotest.event.ReceiveEvent;
-import com.junwtech.iotest.thread.ReceiveThread;
 import com.junwtech.iotest.thread.SendThread;
 import com.junwtech.iotest.util.DataUtil;
+import com.junwtech.iotest.util.JniUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
-public class SettingActivity extends AppCompatActivity {
+public class SmartConfigActivity extends AppCompatActivity {
+
 
     private TextView confirm_row1_title,confirm_row2_title,confirm_row3_title,confirm_row4_title;
     private TextView confirm_row1_content,confirm_row2_content,confirm_row3_content,confirm_row4_content;
@@ -42,21 +47,21 @@ public class SettingActivity extends AppCompatActivity {
             Object obj = msg.obj;
             switch (what){
                 case 0:
-                    if (obj instanceof DataMember){
-                        DataMember args = (DataMember) obj;
-                        confirm_row1_content.setText(args.address);
-                        confirm_row2_content.setText(args.command);
-                        confirm_row3_content.setText(args.qualifier);
-                        confirm_row4_content.setText(String.valueOf(args.data));
+                    if (obj instanceof SmartConfigParam ){
+                        SmartConfigParam param =  (SmartConfigParam)obj;
+                        confirm_row1_content.setText(param.ssid);
+                        confirm_row2_content.setText(param.key);
                     }
                     break;
             }
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting);
+        setContentView(R.layout.activity_smart_config);
+
 
         ActionBar bar = getSupportActionBar();
         if (bar != null) {
@@ -64,10 +69,11 @@ public class SettingActivity extends AppCompatActivity {
             bar.setHomeButtonEnabled(true);
         }
 
-        EventBus.getDefault().register(this);
 
+        EventBus.getDefault().register(this);
         init();
     }
+
 
     private void init(){
 
@@ -91,26 +97,22 @@ public class SettingActivity extends AppCompatActivity {
         config_row3_content=(EditText)(findViewById(R.id.config_row3).findViewById(R.id.config_row_content_et));
         config_row4_content=(EditText)(findViewById(R.id.config_row4).findViewById(R.id.config_row_content_et));
 
-        confirm_row1_title.setText("Mac地址");
-        confirm_row2_title.setText("命令");
-        confirm_row3_title.setText("限定符");
-        confirm_row4_title.setText("数据");
+        confirm_row1_title.setText("SSID");
+        confirm_row2_title.setText("KEY");
 
-        config_row1_title.setText("Mac地址");
-        config_row2_title.setText("命令");
-        config_row3_title.setText("限定符");
-        config_row4_title.setText("数据");
 
-        config_row2_content.setText("RSW");
+
+        config_row1_title.setText("SSID");
+        config_row2_title.setText("KEY");
+
+
+        config_row1_content.setText("123456");
+        config_row2_content.setText("123456");
         config_row3_content.setText("=");
-        config_row4_content.setText("1949.2345");
+
 
     }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
-    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -123,6 +125,8 @@ public class SettingActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -131,28 +135,28 @@ public class SettingActivity extends AppCompatActivity {
 
     public void config(View view) {
         String s = null;
+        DataModel dm = null;
         try {
-            s = DataUtil.DataGenerate(
-                    config_row1_content.getText().toString(),
-                    config_row2_content.getText().toString(),
-                    config_row3_content.getText().toString(),
-                    Float.parseFloat(config_row4_content.getText().toString()));
-            Log.w(this.getPackageName(),"---->"+s);
+            SmartConfigParam param = new SmartConfigParam();
+            param.type =1 ;
+            param.uuid = "10007" ;
+            param.ssid = config_row1_content.getText().toString().trim();
+            param.key = config_row2_content.getText().toString().trim();
+            dm =  DataUtil.getSmartConfigMsg(param, 0);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (s !=null) {
-            byte[] bytes = s.getBytes();
+        if (dm != null) {
+            Log.w(this.getPackageName(),"发送---->"+dm.fixHeader+"---"+dm.ascii+"-----"+dm.gb2312);
+            byte[] bytes = JniUtils.encoder(dm.fixHeader,dm.ascii,dm.gb2312);
+            Log.w(this.getPackageName(),"发送--->"+new String(bytes));
             try {
-                if (BaseApplication.hostIp.equals("")) {
-                    InetAddress ip = InetAddress.getByName(BaseApplication.hostIp);
-                    DatagramPacket dp = new DatagramPacket(bytes, bytes.length,ip,50002);
-                    BaseApplication.cachePool.execute(new SendThread(dp));
-
-                } else {
-                    Toast.makeText(SettingActivity.this, "没有获得有效的地址", Toast.LENGTH_SHORT).show();
-                    throw new UnknownHostException("没有获得有效的地址");
-                }
+                String hostIp = getLocalIpAddress(this);
+                int end = hostIp.lastIndexOf(".");
+                String broacast = hostIp.substring(0,end)+".255";
+                InetAddress ip = InetAddress.getByName(broacast);
+                DatagramPacket dp = new DatagramPacket(bytes, bytes.length,ip,50001);
+                BaseApplication.cachePool.execute(new SendThread(dp));
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
@@ -160,6 +164,7 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     public void confirm(View view) {
+
     }
 
     @Subscribe
@@ -167,19 +172,43 @@ public class SettingActivity extends AppCompatActivity {
         if (event != null){
             DatagramPacket dp = event.getDp();
             byte[] data = dp.getData();
-            InetAddress address = dp.getAddress();
-            BaseApplication.hostIp = address.getHostAddress();
-            Toast.makeText(this,BaseApplication.hostIp,Toast.LENGTH_SHORT).show();
             String s = new String(data);
-            if (s.startsWith(">")) {
-                DataMember dataMember = DataUtil.DataParse(s);
-                if (dataMember != null) {
-                    Message message = mHandler.obtainMessage();
-                    message.what = 0;
-                    message.obj = dataMember;
-                    mHandler.sendMessage(message);
-                }
+            Log.w(this.getPackageName(),"接收---->"+s);
+            if (s.contains("SSID")) {
+                SmartConfigParam param = new SmartConfigParam();
+                int x= s.indexOf(":");
+                int y = s.indexOf("@");
+                int z = s.lastIndexOf(":");
+                param.ssid = s.substring(x+1,y);
+                param.key = s.substring(z+1,s.length());
+                Message message = mHandler.obtainMessage();
+                message.what = 0;
+                message.obj = param ;
+                mHandler.sendMessage(message);
             }
         }
     }
+
+    private String getLocalIpAddress(Context context) {
+        try {
+            WifiManager wifiManager = (WifiManager) context
+                    .getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int i = wifiInfo.getIpAddress();
+            return int2ip(i);
+        } catch (Exception ex) {
+            return " 获取IP出错!!!!请保证是WIFI,或者请重新打开网络!\n" + ex.getMessage();
+        }
+        // return null;
+    }
+
+    private String int2ip(int ipInt) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ipInt & 0xFF).append(".");
+        sb.append((ipInt >> 8) & 0xFF).append(".");
+        sb.append((ipInt >> 16) & 0xFF).append(".");
+        sb.append((ipInt >> 24) & 0xFF);
+        return sb.toString();
+    }
+
 }
