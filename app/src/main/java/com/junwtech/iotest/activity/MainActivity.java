@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         mSwitch = (ToggleButton) findViewById(R.id.switch_main);
         mSwitch.setOnCheckedChangeListener(this);
         Log.w(this.getLocalClassName(),"---->"+mSwitch.getScrollBarStyle());
-        new ReceiveThread(getApplicationContext()).start();
+//        new ReceiveThread(getApplicationContext()).start();
 
 
     }
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         int id = item.getItemId();
         switch (id){
             case R.id.action_settings:
-                startActivity(new Intent(this,SmartConfigActivity.class));
+                startActivity(new Intent(this,HotspotActivity.class));
                 return  true;
         }
         return super.onOptionsItemSelected(item);
